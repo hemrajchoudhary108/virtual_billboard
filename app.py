@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import sys
 
 # Defining window name
 window_name = 'Image'
@@ -39,35 +40,47 @@ def get_roi_points(image: np.ndarray) -> np.ndarray:
 # ----------------------------------------------------------------------
 # Main processing function
 # ----------------------------------------------------------------------
+def processing(src_path, dst_path):
+    # Reading the image
+    image_src_path = src_path
+    image = cv2.imread(image_src_path)
 
-# Reading the image
-image_src_path = 'destination_image.png'
-image = cv2.imread(image_src_path)
+    # Reading the destination image
+    dst_img_path = dst_path
+    dst_image = cv2.imread(dst_img_path)
 
-# Reading the destination image
-dst_img_path = 'dst.jpg'
-dst_image = cv2.imread(dst_img_path)
+    # Calculating the cordinates of four corners of src image
+    src_h, src_w, _ = image.shape
+    src_points = np.array([[0, 0], [src_w - 1, 0], [src_w-1, src_h-1], [0, src_h-1]], dtype=np.float32)
+    print('Select the ROI points in the destination image')
+    print('Select the ROI points in the destination image')
+    print('In order of top-left, top-right, bottom-right, bottom-left')
+    print('Hit enter key after selecting the points')
 
-# Calculating the cordinates of four corners of src image
-src_h, src_w, _ = image.shape
-src_points = np.array([[0, 0], [src_w - 1, 0], [src_w-1, src_h-1], [0, src_h-1]], dtype=np.float32)
+    dst_points = get_roi_points(dst_image)
 
-print('Select the ROI points in the destination image, Note: select in the order of top-left, top-right, bottom-right, bottom-left')
-dst_points = get_roi_points(dst_image)
+    # Calculating the homography matrix
+    h, status = cv2.findHomography(src_points, dst_points)
 
-# Calculating the homography matrix
-h, status = cv2.findHomography(src_points, dst_points)
+    # Black out the destination image of selected ROI
+    cv2.fillConvexPoly(dst_image, dst_points.astype(int), 0, 16)
 
-# Black out the destination image of selected ROI
-cv2.fillConvexPoly(dst_image, dst_points.astype(int), 0, 16)
+    # Warp the source image to destination based on homography
+    warped_image = cv2.warpPerspective(image, h, (dst_image.shape[1], dst_image.shape[0]))
 
-# Warp the source image to destination based on homography
-warped_image = cv2.warpPerspective(image, h, (dst_image.shape[1], dst_image.shape[0]))
+    # Add the warped image to destination image
+    final_image = dst_image + warped_image
 
-# Add the warped image to destination image
-final_image = dst_image + warped_image
+    # Display the final image
+    cv2.imshow('Final Image', final_image)
+    cv2.waitKey(0)
+    cv2.imwrite('Final.png', final_image)
 
-# Display the final image
-cv2.imshow('Final Image', final_image)
-cv2.waitKey(0)
-cv2.imwrite('Final.png', final_image)
+if __name__ == '__main__':
+    args = sys.argv
+    if len(args) != 3:
+        print('Usage: python app.py <source_image_path> <destination_image_path>')
+        sys.exit(1)
+    src_path = args[1]
+    dst_path = args[2]
+    processing(src_path, dst_path)
