@@ -6,6 +6,6 @@ Input
 
 Output  
 
-<img width="256" alt="src" src="https://github.com/user-attachments/assets/d9a61f51-fc5c-459b-8953-f6d7f46e484a" />  
+<img width="512" alt="src" src="https://github.com/user-attachments/assets/d9a61f51-fc5c-459b-8953-f6d7f46e484a" />  
 
 
